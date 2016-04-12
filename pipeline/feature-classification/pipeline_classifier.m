@@ -8,7 +8,7 @@ data_directory = ['/data/retinopathy/OCT/SERI/feature_data/' ...
                   'liu_2011/hog/'];
 % Location to store the results
 store_directory = ['/data/retinopathy/OCT/SERI/results/' ...
-                   'liu_2016/'];
+                   'liu_2011/'];
 % Location of the ground-truth
 gt_file = '/data/retinopathy/OCT/SERI/data.xls';
 
