@@ -23,6 +23,9 @@ data_label = [ raw_data{ 2:end, 2 } ];
 idx_class_pos = find( data_label ==  1 );
 idx_class_neg = find( data_label == -1 );
 
+% Number of the slices per volume 
+B_scans = 128; 
+
 % poolobj = parpool('local', 48);
 
 % Pre-allocate where the data will be locate
@@ -44,17 +47,15 @@ for idx_cv_lpo = 1:length(idx_class_pos)
     training_label = [];
     
     
-    
+    % Loading the testing temporary data 
     % Load the positive patient
-    load( strcat( data_directory, filename{ idx_class_pos(idx_cv_lpo) ...
-                   } ) );
+    load( strcat( data_directory, filename{ idx_class_pos(idx_cv_lpo) } ) );
     % Concatenate the data
     testing_data_tem = [ testing_data_tem ; lbp_feat ];
     % Create and concatenate the label
     testing_label = [ testing_label, 1 ];
     % Load the negative patient
-    load( strcat( data_directory, filename{ idx_class_neg(idx_cv_lpo) ...
-                   } ) );
+    load( strcat( data_directory, filename{ idx_class_neg(idx_cv_lpo) } ) );
     % Concatenate the data
     testing_data_tem = [ testing_data_tem ; lbp_feat ];
     % Create and concatenate the label
@@ -62,8 +63,7 @@ for idx_cv_lpo = 1:length(idx_class_pos)
 
     disp('Created the testing set');
 
-    % CREATE THE TRAINING SET
-
+    % Loadind the training temporary file 
     for tr_idx = 1:length(idx_class_pos)
         % Consider only the data which where not used for the
         % testing set
@@ -90,15 +90,25 @@ for idx_cv_lpo = 1:length(idx_class_pos)
     for lev = 1 : size(pyr_indexes,1)
         % Make PCA decomposition keeping the 59 (equal to the size of uniform lbp) first components which
         % are the one > than 0.1 % of significance
-        train_data_lev = train_data_tem(:, pyr_indexes(lev,1) : pyr_indexes(lev,2) ) ; 
-        train_data_lev_patch = reshape(size(train_data_tem,1)*)
+        train_data_lev = training_data_tem(:, pyr_info(lev,1) : pyr_info(lev,2) ) ; 
+        train_data_lev_patch = reshape(train_data_lev, [size(training_data_tem,1) * pyr_info(lev,4) * B_scans, feat_desc_dim]); 
+        
+        % training a PCA model based on the training to reduce the
+        % lbp dimensions to 59 
         [coeff, score, latent, tsquared, explained, mu] = ...
-        pca(training_data, 'NumComponents', 59);
+        pca(training_data_lev_patch, 'NumComponents', 59);
         % Apply the transformation to the training data
-        training_data = score;
+        clear train_data_lev_patch train_data_lev
+        train_data_lev = reshape(score, [size(training_data_tem, 1) * B_scans , pyr_info(lev,4) * 59]); 
+        training_data = [training_data, train_data_lev];
+        
         % Apply the transformation to the testing data
         % Remove the mean computed during the training of the PCA
-        testing_data = (bsxfun(@minus, testing_data, mu)) * coeff;
+        testing_data_lev = testing_data_tem(:, pyr_info(lev,1) : pyr_info(lev,2)); 
+        testing_data_lev_patch = reshape(testing_data_lev, [size(testing_data_tem,1) * pyr_info(lev,4) * B_scans, feat_desc_dim]); 
+        clear testing_data_lev
+        testing_data_lev = reshape(((bsxfun(@minus, testing_data_lev_patch, mu)) * coeff), [size(testing_data_tem,1)* B_scans , pyr_info(lev,4) * feat_desc_dim] ) ; 
+        testing_data = [testing_data, testing_data_lev]; 
         
     end 
     
