@@ -5,10 +5,10 @@ clc;
 % Give the information about the data location
 % Location of the features
 data_directory = ['/data/retinopathy/OCT/SERI/feature_data/' ...
-                  'liu_2011/lbp/'];
+                  'liu_2011/hog/'];
 % Location to store the results
 store_directory = ['/data/retinopathy/OCT/SERI/results/' ...
-                   'liu_2011/'];
+                   'liu_2016/'];
 % Location of the ground-truth
 gt_file = '/data/retinopathy/OCT/SERI/data.xls';
 
@@ -35,29 +35,35 @@ for idx_cv_lpo = 1:length(idx_class_pos)
     % The two patients for testing will corresspond to the current
     % index of the cross-validation
 
-    % CREATE THE TESTING SET
+    % Initialization of training and testing
     testing_data = [];
+    testing_data_tem = []; 
     testing_label = [];
+    training_data = [];
+    training_data_tem = []; 
+    training_label = [];
+    
+    
+    
     % Load the positive patient
     load( strcat( data_directory, filename{ idx_class_pos(idx_cv_lpo) ...
                    } ) );
     % Concatenate the data
-    testing_data = [ testing_data ; lbp_feat ];
+    testing_data_tem = [ testing_data_tem ; lbp_feat ];
     % Create and concatenate the label
-    testing_label = [ testing_label ones(1, size(hog_feat, 1)) ];
+    testing_label = [ testing_label, 1 ];
     % Load the negative patient
     load( strcat( data_directory, filename{ idx_class_neg(idx_cv_lpo) ...
                    } ) );
     % Concatenate the data
-    testing_data = [ testing_data ; hog_feat ];
+    testing_data_tem = [ testing_data_tem ; lbp_feat ];
     % Create and concatenate the label
-    testing_label = [ testing_label ( -1 * ones(1, size(hog_feat, 1))) ];
+    testing_label = [ testing_label, -1 ];
 
     disp('Created the testing set');
 
     % CREATE THE TRAINING SET
-    training_data = [];
-    training_label = [];
+
     for tr_idx = 1:length(idx_class_pos)
         % Consider only the data which where not used for the
         % testing set
@@ -66,26 +72,56 @@ for idx_cv_lpo = 1:length(idx_class_pos)
             load( strcat( data_directory, filename{ idx_class_pos(tr_idx) ...
                    } ) );
             % Concatenate the data
-            training_data = [ training_data ; hog_feat ];
+            training_data_tem = [ training_data_tem ; lbp_feat ];
             % Create and concatenate the label
-            training_label = [ training_label ones(1, size(hog_feat, 1)) ];
+            training_label = [ training_label, 1 ];
             % Load the negative patient
             load( strcat( data_directory, filename{ idx_class_neg(tr_idx) ...
                    } ) );
             % Concatenate the data
-            training_data = [ training_data ; hog_feat ];
+            training_data_tem = [ training_data_tem ; lbp_feat ];
             % Create and concatenate the label
-            training_label = [ training_label (-1 * ones(1, size(hog_feat, 1))) ];
+            training_label = [ training_label, -1 ];
         end
     end
+    
+    % PCA should be applied according to each pyramid level 
+    % pyr_indexes, feat_desc_dim
+    for lev = 1 : size(pyr_indexes,1)
+        % Make PCA decomposition keeping the 59 (equal to the size of uniform lbp) first components which
+        % are the one > than 0.1 % of significance
+        train_data_lev = train_data_tem(:, pyr_indexes(lev,1) : pyr_indexes(lev,2) ) ; 
+        train_data_lev_patch = reshape(size(train_data_tem,1)*)
+        [coeff, score, latent, tsquared, explained, mu] = ...
+        pca(training_data, 'NumComponents', 59);
+        % Apply the transformation to the training data
+        training_data = score;
+        % Apply the transformation to the testing data
+        % Remove the mean computed during the training of the PCA
+        testing_data = (bsxfun(@minus, testing_data, mu)) * coeff;
+        
+    end 
+    
 
     disp('Created the training set');
 
+    % Make PCA decomposition keeping the 59 (equal to the size of uniform lbp) first components which
+    % are the one > than 0.1 % of significance
+    [coeff, score, latent, tsquared, explained, mu] = ...
+        pca(training_data, 'NumComponents', 59);
+    % Apply the transformation to the training data
+    training_data = score;
+    % Apply the transformation to the testing data
+    % Remove the mean computed during the training of the PCA
+    testing_data = (bsxfun(@minus, testing_data, mu)) * coeff;
+    
     % Perform the training of the SVM
-    svmStruct = svmtrain( training_data, training_label );
+    % svmStruct = svmtrain( training_data, training_label );
+    SVMModel = fitcsvm(training_data, training_label);
     disp('Trained SVM classifier');
     % Test the performance of the SVM
-    pred_label = svmclassify(svmStruct, testing_data);
+    % pred_label = svmclassify(svmStruct, testing_data);
+    pred_label = predict(SVMModel, testing_data);
     disp('Tested SVM classifier');
 
     % We need to split the data to get a prediction for each volume
@@ -97,6 +133,6 @@ for idx_cv_lpo = 1:length(idx_class_pos)
     disp('Applied majority voting');
 end
 
-save(strcat(store_directory, 'predicition.mat'), 'pred_label_cv');
+save(strcat(store_directory, 'predicition_pca_hog.mat'), 'pred_label_cv');
 
 %delete(poolobj);
