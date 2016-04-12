@@ -23,8 +23,6 @@ data_label = [ raw_data{ 2:end, 2 } ];
 idx_class_pos = find( data_label ==  1 );
 idx_class_neg = find( data_label == -1 );
 
-% Number of the slices per volume 
-B_scans = 128; 
 
 % poolobj = parpool('local', 48);
 
@@ -53,15 +51,19 @@ for idx_cv_lpo = 1:length(idx_class_pos)
     % Concatenate the data
     testing_data_tem = [ testing_data_tem ; lbp_feat ];
     % Create and concatenate the label
-    testing_label = [ testing_label, 1 ];
+    testing_label = [ testing_label (1 * ones(1, 1)) ];
     % Load the negative patient
     load( strcat( data_directory, filename{ idx_class_neg(idx_cv_lpo) } ) );
     % Concatenate the data
     testing_data_tem = [ testing_data_tem ; lbp_feat ];
     % Create and concatenate the label
-    testing_label = [ testing_label, -1 ];
+    testing_label = [ testing_label (-1 * ones(1, 1)) ];
 
-    disp('Created the testing set');
+    disp('Loaded the testing set');
+    
+    % Number of the slices per volume 
+    B_scans = size(lbp_feat,1); 
+
 
     % Loadind the training temporary file 
     for tr_idx = 1:length(idx_class_pos)
@@ -74,16 +76,17 @@ for idx_cv_lpo = 1:length(idx_class_pos)
             % Concatenate the data
             training_data_tem = [ training_data_tem ; lbp_feat ];
             % Create and concatenate the label
-            training_label = [ training_label, 1 ];
+            training_label = [  training_label (1 * ones(1, 1)) ];
             % Load the negative patient
             load( strcat( data_directory, filename{ idx_class_neg(tr_idx) ...
                    } ) );
             % Concatenate the data
             training_data_tem = [ training_data_tem ; lbp_feat ];
             % Create and concatenate the label
-            training_label = [ training_label, -1 ];
+            training_label = [  training_label (-1 * ones(1, 1)) ];
         end
     end
+    disp('Loaded the training set')
     
     % PCA should be applied according to each pyramid level 
     % pyr_indexes, feat_desc_dim
@@ -111,19 +114,31 @@ for idx_cv_lpo = 1:length(idx_class_pos)
         testing_data = [testing_data, testing_data_lev]; 
         
     end 
+    disp('Projected the data using PCA for LBP');
+
+    % Applying BoW on the data 
+    k = 60;
+    [idxs C] = kmeans(training_data,k);
+    training_histogram=[];
+    for train_id = 1 : size(lbp_feat,1) :size(training_data,1)
+        [knn_idxs D] = knnsearch( C, training_data(train_id : train_id + size(lbp_feat,1)-1,:));
+        histogram = hist(knn_idxs,k);
+        norm_histogram = histogram ./ sum(histogram);
+        training_histogram = [training_histogram; norm_histogram];
+    end
+    disp('Creation of training set using BoW');
+    training_data = training_histogram;
+
+    testing_histogram = [];
+    for test_id = 1 : size(hog_feat,1) : size(testing_data,1)
+        [knn_idxs D] = knnsearch( C, testing_data(test_id : test_id + size(hog_feat,1)-1,:));
+        histogram = hist(knn_idxs,k);
+        norm_histogram = histogram ./ sum(histogram);
+        temp_res=[testing_histogram; norm_histogram];
+    end
+    testing_data = testing_histogram;
+    disp('Creation of testing set using BoW'); 
     
-
-    disp('Created the training set');
-
-    % Make PCA decomposition keeping the 59 (equal to the size of uniform lbp) first components which
-    % are the one > than 0.1 % of significance
-    [coeff, score, latent, tsquared, explained, mu] = ...
-        pca(training_data, 'NumComponents', 59);
-    % Apply the transformation to the training data
-    training_data = score;
-    % Apply the transformation to the testing data
-    % Remove the mean computed during the training of the PCA
-    testing_data = (bsxfun(@minus, testing_data, mu)) * coeff;
     
     % Perform the training of the SVM
     % svmStruct = svmtrain( training_data, training_label );
@@ -134,15 +149,11 @@ for idx_cv_lpo = 1:length(idx_class_pos)
     pred_label = predict(SVMModel, testing_data);
     disp('Tested SVM classifier');
 
-    % We need to split the data to get a prediction for each volume
-    % tested
-    % Compute the majority voting for each testing volume
-    maj_vot = [ mode( pred_label(1:size(hog_feat,1)) ) ...
-                mode( pred_label(size(hog_feat, 1) + 1:end) )];
-    pred_label_cv( idx_cv_lpo, : ) = maj_vot;    
+
+    pred_label_cv( idx_cv_lpo, : ) = pred_label;    
     disp('Applied majority voting');
 end
 
-save(strcat(store_directory, 'predicition_pca_hog.mat'), 'pred_label_cv');
+save(strcat(store_directory, 'predicition_pca_bow_mssp_lbp.mat'), 'pred_label_cv');
 
 %delete(poolobj);
