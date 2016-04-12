@@ -5,10 +5,10 @@ clc;
 % Give the information about the data location
 % Location of the features
 data_directory = ['/data/retinopathy/OCT/SERI/feature_data/' ...
-                  'srinivasan_2014/hog/'];
+                  'liu_2011/lbp/'];
 % Location to store the results
 store_directory = ['/data/retinopathy/OCT/SERI/results/' ...
-                   'srinivasan_2014/'];
+                   'liu_2011/'];
 % Location of the ground-truth
 gt_file = '/data/retinopathy/OCT/SERI/data.xls';
 
@@ -42,7 +42,7 @@ for idx_cv_lpo = 1:length(idx_class_pos)
     load( strcat( data_directory, filename{ idx_class_pos(idx_cv_lpo) ...
                    } ) );
     % Concatenate the data
-    testing_data = [ testing_data ; hog_feat ];
+    testing_data = [ testing_data ; lbp_feat ];
     % Create and concatenate the label
     testing_label = [ testing_label ones(1, size(hog_feat, 1)) ];
     % Load the negative patient
