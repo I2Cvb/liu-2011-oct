@@ -7,9 +7,9 @@ run('../../../../third-party/protoclass_matlab/setup.m');
 
 % Data after the pre-processing
 data_directory = ['/data/retinopathy/OCT/SERI/pre_processed_data/' ...
-                  'srinivasan_2014/'];
+                  'liu_2011/'];
 store_directory = ['/data/retinopathy/OCT/SERI/feature_data/' ...
-                   'liu_2014/lbp/'];
+                   'liu_2011/lbp/'];
 directory_info = dir(data_directory);
 
 poolobj = parpool('local', 40);
