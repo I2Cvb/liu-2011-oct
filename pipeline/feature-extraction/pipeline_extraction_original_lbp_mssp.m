@@ -6,10 +6,10 @@ clc;
 run('../../../../third-party/protoclass_matlab/setup.m');
 
 % Data after the pre-processing
-data_directory = ['/data/retinopathy/OCT/SERI/feature_data/' ...
-                  'liu_2011/canny/'];
+data_directory = ['/data/retinopathy/OCT/SERI/pre_processed_data/' ...
+                  'liu_2011/'];
 store_directory = ['/data/retinopathy/OCT/SERI/feature_data/' ...
-                   'liu_2011/canny_lbp/'];
+                   'liu_2011/original_lbp/'];
 directory_info = dir(data_directory);
 
 poolobj = parpool('local', 40);
@@ -26,6 +26,10 @@ for idx_file = 1:size(directory_info)
         % Read the file
         load( filename );
 
+        % Encode the volume only on 32 bits as Liu et al
+        vol_cropped = round(double(vol_cropped) / double(max(vol_cropped(:))) ...
+            * 32);
+
         % Extract the HOG features
         pyr_num_lev = 3;
         NumNeighbors = 8 ; 
@@ -37,7 +41,7 @@ for idx_file = 1:size(directory_info)
         % Needs to be checked 
         CellSize = [32 32];
 
-        [lbp_feat, pyr_info, feat_desc_dim] = extract_lbp_volume_mssp( vol_canny, pyr_num_lev, ...
+        [lbp_feat, pyr_info, feat_desc_dim] = extract_lbp_volume_mssp( vol_cropped, pyr_num_lev, ...
                                                           NumNeighbors,Radius, CellSize, ...
                                                           MODE, mapping) ; 
         disp( [ 'Feature for file  ', directory_info(idx_file).name, ...
