@@ -213,7 +213,7 @@ for idx_cv_lpo = 1:length(idx_class_pos)
         [knn_idxs D] = knnsearch( C, testing_data(test_id : test_id + size(lbp_feat,1)-1,:));
         histogram = hist(knn_idxs,k);
         norm_histogram = histogram ./ sum(histogram);
-        temp_res=[testing_histogram; norm_histogram];
+        testing_histogram=[testing_histogram; norm_histogram];
     end
     testing_data = testing_histogram;
     disp('Creation of testing set using BoW');
