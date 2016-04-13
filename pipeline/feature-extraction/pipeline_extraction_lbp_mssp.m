@@ -7,9 +7,9 @@ run('../../../../third-party/protoclass_matlab/setup.m');
 
 % Data after the pre-processing
 data_directory = ['/data/retinopathy/OCT/SERI/pre_processed_data/' ...
-                  'srinivasan_2014/'];
+                  'liu_2011/'];
 store_directory = ['/data/retinopathy/OCT/SERI/feature_data/' ...
-                   'srinivasan_2014/hog/'];
+                   'liu_2011/lbp/'];
 directory_info = dir(data_directory);
 
 poolobj = parpool('local', 40);
@@ -27,24 +27,27 @@ for idx_file = 1:size(directory_info)
         load( filename );
 
         % Extract the HOG features
-        pyr_num_lev = 4;
+        pyr_num_lev = 3;
+        NumNeighbors = 8 ; 
+        Radius = 1 ;
+        % Normalized histogram 
+        MODE = 'nh'; 
+        % no mapping, normal LBP with 256 dimension is applied
+        mapping = 'none'; 
+        % Needs to be checked 
         CellSize = [4 4];
-        BlockSize = [2 2];
-        BlockOverlap = [1 1];
-        NumBins = 9;
 
-        hog_feat = extract_hog_volume( vol_cropped, pyr_num_lev, ...
-                                       CellSize, ...
-                                       BlockSize, BlockOverlap, ...
-                                       NumBins );
+        [lbp_feat, pyr_info, feat_desc_dim] = extract_lbp_volume_mssp( vol_cropped, pyr_num_lev, ...
+                                       NumNeighbors,Radius, CellSize, ...
+                                       MODE, mapping) ; 
         disp( [ 'Feature for file  ', directory_info(idx_file).name, ...
                 ' extracted' ] );
 
         % Store the data
         store_filename = strcat( store_directory, ...
                                  directory_info(idx_file).name ); 
-        save( store_filename, 'hog_feat' );
-        disp( [ 'Feature for file  ', directory_info(idx_file).name, ...
+        save( store_filename, 'lbp_feat', 'pyr_info', 'feat_desc_dim');
+        disp( [ 'Feature for file  ', directory_, info(idx_file).name, ...
                 ' stored' ] );
     end
 end
