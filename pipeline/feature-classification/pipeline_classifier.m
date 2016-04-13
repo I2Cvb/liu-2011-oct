@@ -92,28 +92,29 @@ for idx_cv_lpo = 1:length(idx_class_pos)
     disp('Loaded the training set')
     
     % PCA should be applied according to each pyramid level 
-    % pyr_indexes, feat_desc_dim
-    for lev = 1 : size(pyr_indexes,1)
+    % pyr_info, feat_desc_dim
+    for lev = 1 : size(pyr_info,1)
         % Make PCA decomposition keeping the 59 (equal to the size of uniform lbp) first components which
         % are the one > than 0.1 % of significance
-        train_data_lev = training_data_tem(:, pyr_info(lev,1) : pyr_info(lev,2) ) ; 
-        train_data_lev_patch = reshape(train_data_lev, [size(training_data_tem,1) * pyr_info(lev,4) * B_scans, feat_desc_dim]); 
+        training_data_lev = training_data_tem(:, pyr_info(lev,1) : ...
+                                           pyr_info(lev,2) );
+        training_data_lev_patch = reshape(training_data_lev, [size(training_data_tem,1) * pyr_info(lev,4) , feat_desc_dim]); 
         
         % training a PCA model based on the training to reduce the
         % lbp dimensions to 59 
         [coeff, score, latent, tsquared, explained, mu] = ...
         pca(training_data_lev_patch, 'NumComponents', 59);
         % Apply the transformation to the training data
-        clear train_data_lev_patch train_data_lev
-        train_data_lev = reshape(score, [size(training_data_tem, 1) * B_scans , pyr_info(lev,4) * 59]); 
-        training_data_org_lbp = [training_data_org_lbp, train_data_lev];
+        clear training_data_lev_patch training_data_lev
+        training_data_lev = reshape(score, [size(training_data_tem, 1)  , pyr_info(lev,4) * 59]); 
+        training_data_org_lbp = [training_data_org_lbp, training_data_lev];
         
         % Apply the transformation to the testing data
         % Remove the mean computed during the training of the PCA
         testing_data_lev = testing_data_tem(:, pyr_info(lev,1) : pyr_info(lev,2)); 
-        testing_data_lev_patch = reshape(testing_data_lev, [size(testing_data_tem,1) * pyr_info(lev,4) * B_scans, feat_desc_dim]); 
+        testing_data_lev_patch = reshape(testing_data_lev, [size(testing_data_tem,1) * pyr_info(lev,4), feat_desc_dim]); 
         clear testing_data_lev
-        testing_data_lev = reshape(((bsxfun(@minus, testing_data_lev_patch, mu)) * coeff), [size(testing_data_tem,1)* B_scans , pyr_info(lev,4) * feat_desc_dim] ) ; 
+        testing_data_lev = reshape(((bsxfun(@minus, testing_data_lev_patch, mu)) * coeff), [size(testing_data_tem,1) , pyr_info(lev,4) * 59] ) ; 
         testing_data_org_lbp = [testing_data_org_lbp, testing_data_lev]; 
         
     end 
@@ -161,28 +162,28 @@ for idx_cv_lpo = 1:length(idx_class_pos)
     disp('Loaded the training set')
     
     % PCA should be applied according to each pyramid level 
-    % pyr_indexes, feat_desc_dim
-    for lev = 1 : size(pyr_indexes,1)
+    % pyr_info, feat_desc_dim
+    for lev = 1 : size(pyr_info,1)
         % Make PCA decomposition keeping the 59 (equal to the size of uniform lbp) first components which
         % are the one > than 0.1 % of significance
-        train_data_lev = training_data_tem(:, pyr_info(lev,1) : pyr_info(lev,2) ) ; 
-        train_data_lev_patch = reshape(train_data_lev, [size(training_data_tem,1) * pyr_info(lev,4) * B_scans, feat_desc_dim]); 
+        training_data_lev = training_data_tem(:, pyr_info(lev,1) : pyr_info(lev,2) ) ; 
+        training_data_lev_patch = reshape(training_data_lev, [size(training_data_tem,1) * pyr_info(lev,4) , feat_desc_dim]); 
         
         % training a PCA model based on the training to reduce the
         % lbp dimensions to 59 
         [coeff, score, latent, tsquared, explained, mu] = ...
         pca(training_data_lev_patch, 'NumComponents', 59);
         % Apply the transformation to the training data
-        clear train_data_lev_patch train_data_lev
-        train_data_lev = reshape(score, [size(training_data_tem, 1) * B_scans , pyr_info(lev,4) * 59]); 
-        training_data_canny_lbp = [training_data_canny_lbp, train_data_lev];
+        clear training_data_lev_patch training_data_lev
+        training_data_lev = reshape(score, [size(training_data_tem, 1) , pyr_info(lev,4) * 59]); 
+        training_data_canny_lbp = [training_data_canny_lbp, training_data_lev];
         
         % Apply the transformation to the testing data
         % Remove the mean computed during the training of the PCA
         testing_data_lev = testing_data_tem(:, pyr_info(lev,1) : pyr_info(lev,2)); 
-        testing_data_lev_patch = reshape(testing_data_lev, [size(testing_data_tem,1) * pyr_info(lev,4) * B_scans, feat_desc_dim]); 
+        testing_data_lev_patch = reshape(testing_data_lev, [size(testing_data_tem,1) * pyr_info(lev,4) , feat_desc_dim]); 
         clear testing_data_lev
-        testing_data_lev = reshape(((bsxfun(@minus, testing_data_lev_patch, mu)) * coeff), [size(testing_data_tem,1)* B_scans , pyr_info(lev,4) * feat_desc_dim] ) ; 
+        testing_data_lev = reshape(((bsxfun(@minus, testing_data_lev_patch, mu)) * coeff), [size(testing_data_tem,1), pyr_info(lev,4) * 59] ) ; 
         testing_data_canny_lbp = [testing_data_canny_lbp, testing_data_lev]; 
         
     end 
