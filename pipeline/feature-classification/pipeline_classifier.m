@@ -209,15 +209,14 @@ for idx_cv_lpo = 1:length(idx_class_pos)
     training_data = training_histogram;
 
     testing_histogram = [];
-    for test_id = 1 : size(hog_feat,1) : size(testing_data,1)
+    for test_id = 1 : size(lbp_feat,1) : size(testing_data,1)
         [knn_idxs D] = knnsearch( C, testing_data(test_id : test_id + size(hog_feat,1)-1,:));
         histogram = hist(knn_idxs,k);
         norm_histogram = histogram ./ sum(histogram);
         temp_res=[testing_histogram; norm_histogram];
     end
     testing_data = testing_histogram;
-    disp('Creation of testing set using BoW'); 
-    
+    disp('Creation of testing set using BoW');
     
     % Perform the training of the SVM
     % svmStruct = svmtrain( training_data, training_label );
