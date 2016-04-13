@@ -5,7 +5,7 @@ clc;
 % Give the information about the data location
 % Location of the features
 data_directory = ['/data/retinopathy/OCT/SERI/feature_data/' ...
-                  'liu_2011/hog/'];
+                  'liu_2011/lbp/'];
 % Location to store the results
 store_directory = ['/data/retinopathy/OCT/SERI/results/' ...
                    'liu_2011/'];
@@ -154,6 +154,6 @@ for idx_cv_lpo = 1:length(idx_class_pos)
     disp('Applied majority voting');
 end
 
-save(strcat(store_directory, 'predicition_pca_bow_mssp_lbp.mat'), 'pred_label_cv');
+save(strcat(store_directory, 'predicition_lbp_pca_bow_mssp.mat'), 'pred_label_cv');
 
 %delete(poolobj);
