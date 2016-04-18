@@ -78,8 +78,8 @@ From the root directory, launch MATLAB and run:
 
 The method for classification used was:
 
-- Linear SVM,
-- RBF SVM.
+- BoW or majority voting representation,
+- Linear or RBF SVM.
 
 #### Data variables
 
@@ -95,8 +95,10 @@ In the file `pipeline/feature-preprocessing/pipeline_classifier_***.m`, you need
 From the root directory, launch MATLAB and run:
 
 ```
->> run pipeline/feature-classification/pipeline_classifier_linear_SVM.m
->> run pipeline/feature-classification/pipeline_classifier_rbf_SVM.m
+>> run pipeline/feature-classification/pipeline_classifier_maj_vote_linear_SVM.m
+>> run pipeline/feature-classification/pipeline_classifier_maj_vote_rbf_SVM.m
+>> run pipeline/feature-classification/pipeline_classifier_bow_linear_SVM.m
+>> run pipeline/feature-classification/pipeline_classifier_bow_rbf_SVM.m
 ```
 
 ### Validation pipeline
