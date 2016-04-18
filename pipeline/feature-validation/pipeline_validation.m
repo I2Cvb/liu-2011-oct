@@ -30,7 +30,7 @@ end
 
 % Load the results data
 results_filename = ['/data/retinopathy/OCT/SERI/results/' ...
-                    'liu_2011/predicition.mat'];
+                    'liu_2011/predicition_k_40.mat'];
 load(results_filename);
 
 % Linearize the vector loaded
