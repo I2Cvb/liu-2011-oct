@@ -78,22 +78,25 @@ From the root directory, launch MATLAB and run:
 
 The method for classification used was:
 
-- Linear SVM.
+- Linear SVM,
+- RBF SVM.
 
 #### Data variables
 
-In the file `pipeline/feature-preprocessing/pipeline_classifier.m`, you need to set the following variables:
+In the file `pipeline/feature-preprocessing/pipeline_classifier_***.m`, you need to set the following variables:
 
 - `data_directory`: this directory contains the feature extracted from the SD-OCT volumes. The format used was `.mat`.
 - `store_directory`: this directory corresponds to the place where the resulting data will be stored. The format used was `.mat`.
 - `gt_file`: this is the file containing the label for each volume. You will have to make your own strategy.
+- `k`: this is the number of words for the BoW approach.
 
 #### Run the pipeline
 
 From the root directory, launch MATLAB and run:
 
 ```
->> run pipeline/feature-classification/pipeline_classifier.m
+>> run pipeline/feature-classification/pipeline_classifier_linear_SVM.m
+>> run pipeline/feature-classification/pipeline_classifier_rbf_SVM.m
 ```
 
 ### Validation pipeline
